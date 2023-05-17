@@ -1,0 +1,163 @@
+---
+title: "Sprawozdanie Statystyka 27.04"
+author: "Izabela Karczewska, Natalia Kołodziejczyk"
+date: "2023-05-01"
+output: pdf_document
+---
+
+```
+
+
+
+# ZADANIE 1
+```{r}
+library(segmented)
+library(httr)
+library(jsonlite)
+library(tseries)
+
+
+Sys.setlocale("LC_ALL", "English") # Ustawienie czasu
+# Pobieranie danych pogodowych/klimatycznych dla Bialegostoku z API open-meteo
+r <- GET("https://archive-api.open-meteo.com/v1/archive?latitude=53.13&longitude=23.17&start_date=1950-01-01&end_date=2022-12-31&daily=temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,precipitation_hours,winddirection_10m_dominant&timezone=Europe%2FWarsaw",Accept = "application/json")
+jsonRespText <- content(r, as = "text")
+aux <- fromJSON(jsonRespText)
+
+# Tworzenie ramki danych dla danych pogodowych Białegostoku
+bialystok <- data.frame(time = aux$daily$time,
+                     t_2m_max = aux$daily$temperature_2m_max,
+                     t_2m_min = aux$daily$temperature_2m_min,
+                     t_2m_mean = aux$daily$temperature_2m_mean,
+                     p_sum = aux$daily$precipitation_sum,
+                     p_h = aux$daily$precipitation_hours,
+                     w_d = aux$daily$winddirection_10m_dominant)
+
+bialystok$time <- as.Date(bialystok$time)
+
+```
+## PRZYSLOWIE: Sprawdzamy prawdziwość dla miasta Białystok
+
+### Męczennicy, gdy mróz noszą, czterdzieści dni mrozu głoszą
+### W przysłowiu mowa jest o dniu 10 marca, dniu wspominania czterdziestu męczenników z Sebasty
+
+```{r}
+# Wyodrębnienie dnia, miesiąca i roku z daty
+day <- format(bialystok$time, format = "%d")
+month <- format(bialystok$time, format = "%m")
+year <- format(bialystok$time, format = "%Y")
+
+# Konwersja dnia, miesiąca i roku na liczbę
+bialystok$day <- as.numeric(day)
+bialystok$month <- as.numeric(month)
+bialystok$year <- as.numeric(year)
+
+# Sformułowanie warunków logicznych dla dwóch części przysłowia
+logic <- bialystok$month == 3 & bialystok$day == 10
+meczennicy <- bialystok$t_2m_mean[logic]
+
+logic <- (bialystok$month == 3 & bialystok$day > 10) | (bialystok$day <= 19 & bialystok$month ==4 )
+cz_dni_mrozu <- bialystok$t_2m_mean[logic]
+
+# kompresja naszych danych, aby wektory były tej samej długości
+cz_dni_mrozu<-as.vector(tapply(cz_dni_mrozu, rep(1:73, each=40), mean))
+
+# Sprawdzenie przysłowia
+meczennicy<-meczennicy <0
+cz_dni_mrozu<-cz_dni_mrozu <0
+
+# Tworzenie tabeli kontyngencji
+ct <- table(meczennicy, cz_dni_mrozu)
+
+# Hipoteza zerowa: zmienne są niezależne
+# Przeprowadzenie testu chi-kwadrat
+X <- chisq.test(ct)
+X
+```
+## Dla ustalonegp poziomu istotności alfa = 5% błąd związany z odrzuceniem hipotezy zerowej jest od niego mniejszy. W związku z tym, możemy  odrzucić hipotezę o niezależności zmeinnych. Oznacza to, że przysłowie jest zgodne z prawdą dla miasta Białegostoku.
+
+# ZADANIE 2
+```{r}
+
+# Pobieranie danych pogodowych/klimatycznych dla Wrocławia z API open-meteo
+r <- GET("https://archive-api.open-meteo.com/v1/archive?latitude=51.11&longitude=17.06&start_date=1950-01-01&end_date=2022-12-31&daily=temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,precipitation_hours,winddirection_10m_dominant&timezone=Europe%2FWarsaw", Accept = "application/json")
+jsonRespText <- content(r, as = "text")
+aux <- fromJSON(jsonRespText)
+
+# Tworzenie ramki danych dla danych pogodowych Wrocławia
+wroclaw <- data.frame(time = aux$daily$time,
+                       t_2m_max = aux$daily$temperature_2m_max,
+                       t_2m_min = aux$daily$temperature_2m_min,
+                       t_2m_mean = aux$daily$temperature_2m_mean,
+                       p_sum = aux$daily$precipitation_sum,
+                       p_h = aux$daily$precipitation_hours,
+                       w_d = aux$daily$winddirection_10m_dominant)
+
+wroclaw$time <- as.Date(wroclaw$time)
+
+# Wyodrębnienie dnia, miesiąca i roku z daty
+Wday <- format(wroclaw$time, format = "%d")
+Wmonth <- format(wroclaw$time, format = "%m")
+Wyear <- format(wroclaw$time, format = "%Y")
+
+# Konwersja dnia, miesiąca i roku na liczbę
+wroclaw$day <- as.numeric(Wday)
+wroclaw$month <- as.numeric(Wmonth)
+wroclaw$year <- as.numeric(Wyear)
+
+# Teraz robimy to samo dla Krakowa
+r <- GET("https://archive-api.open-meteo.com/v1/archive?latitude=50.06&longitude=19.56&start_date=1950-01-01&end_date=2022-12-31&daily=temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,precipitation_hours,winddirection_10m_dominant&timezone=Europe%2FWarsaw",Accept = "application/json")
+jsonRespText <- content(r, as = "text")
+aux <- fromJSON(jsonRespText)
+
+# Tworzenie ramki danych dla danych pogodowych Krakowa
+krakow <- data.frame(time = aux$daily$time,
+                     t_2m_max = aux$daily$temperature_2m_max,
+                     t_2m_min = aux$daily$temperature_2m_min,
+                     t_2m_mean = aux$daily$temperature_2m_mean,
+                     p_sum = aux$daily$precipitation_sum,
+                     p_h = aux$daily$precipitation_hours,
+                     w_d = aux$daily$winddirection_10m_dominant)
+
+krakow$time <- as.Date(krakow$time)
+
+# Wyodrębnienie dnia, miesiąca i roku z daty
+Kday <- format(krakow$time, format = "%d")
+Kmonth <- format(krakow$time, format = "%m")
+Kyear <- format(krakow$time, format = "%Y")
+
+# Konwersja dnia, miesiąca i roku na liczbę
+krakow$day <- as.numeric(Kday)
+krakow$month <- as.numeric(Kmonth)
+krakow$year <- as.numeric(Kyear)
+
+# Przeprowadzamy testy Kolmogorova-Smirnova 
+temp_sr <- ks.test(krakow$t_2m_mean[krakow$month==7], wroclaw$t_2m_mean[wroclaw$month==7], alternative = "t")
+opady_sr <- ks.test(krakow$p_sum[krakow$month==7], wroclaw$p_sum[wroclaw$month==7], alternative = "t")
+opady_godz <- ks.test(krakow$p_h[krakow$month==7], wroclaw$p_h[wroclaw$month==7], alternative = "t")
+kierunki_wiatr <- ks.test(krakow$w_d[krakow$month==7], wroclaw$w_d[wroclaw$month == 7], alternative = "t")
+
+print(temp_sr)
+print(opady_godz)
+print(opady_sr)
+print(kierunki_wiatr)
+
+# Histogramy dla danych dotyczących opadów godzinowych
+k <- hist(krakow$p_h[krakow$month==7],plot=FALSE)
+w <- hist(wroclaw$p_h[wroclaw$month==7],plot=FALSE)
+
+plot(k,col=rgb(red=0.4,green=0.8, blue=0.1, alpha=0.5),main="Porównanie danych dla Krakowa i Wrocławia - Opady godzinowe", xlab="Ilość opadów")
+plot(w,col = rgb(red = 0.1, green = 0, blue = 1, alpha = 0.5),add=TRUE)
+legend(x = "topright",legend = c("Kraków", "Wrocław"), fill=c(rgb(red=0.4,green=0.8, blue=0.1, alpha=0.5),rgb(red = 0.1, green = 0, blue = 1, alpha = 0.5)))
+
+# Histogramy dla danych dotyczących średniej temperatury
+k <- hist(krakow$t_2m_mean[krakow$month==7],plot=FALSE,breaks=20)
+w <- hist(wroclaw$t_2m_mean[wroclaw$month==7],plot=FALSE,breaks=20)
+
+plot(k,col=rgb(red=0.4,green=0.5, blue=0.1, alpha=0.5),main="Porównanie danych dla Krakowa i Wrocławia - Średnia temperatura", xlab="Temperatura w stopniach")
+plot(w,col = rgb(red = 0.8, green = 0.2, blue = 0.4, alpha = 0.4),add=TRUE)
+legend(x = "topright",legend = c("Kraków", "Wrocław"), fill=c(rgb(red=0.4,green=0.5, blue=0.1, alpha=0.5),rgb(red = 0.8, green = 0.2, blue = 0.4, alpha = 0.4)))
+```
+# WNIOSKI
+## W przeprowadzonych testach porównano rozkłady zmiennych pogodowych pomiędzy Krakowem i Wrocławiem. Wszystkie testy wykazały, że rozkłady w obu miastach różnią się od siebie, ponieważ p-wartości dla każdego testu były znacznie mniejsze od 0,05.
+
+## Można z tego wywnioskować, że w ciągu lipca średnie temperatury, ilości opadów i godzin opadowych oraz kierunki wiatru różnią się między Krakowem i Wrocławiem. Testy KS sugerują, że miasta te mają różne charakterystyki klimatyczne w tym czasie.
