@@ -1,4 +1,4 @@
-# Statystyka-studia
+# Statistics - college project
 This is the Analysis of weather data for Białystok, Wrocław and Kraków in R language. All done in RMarkdown.
 
 ### Data used
