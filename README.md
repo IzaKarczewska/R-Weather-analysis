@@ -1,5 +1,5 @@
 # Statystyka-studia
-This is the Analysis of weather data for Bialystok in R language. All done in RMarkdown.
+This is the Analysis of weather data for Białystok, Wrocław and Kraków in R language. All done in RMarkdown.
 
 ### Data used
 [Link - Open Meteo](https://archive-api.open-meteo.com/v1/archive?latitude=53.13&longitude=23.17&start_date=1950-01-01&end_date=2022-12-31&daily=temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,precipitation_hours,winddirection_10m_dominant&timezone=Europe%2FWarsaw)
